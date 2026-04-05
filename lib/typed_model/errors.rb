@@ -16,10 +16,14 @@ module TypedModel
       end
     end
 
-    def each_error(&blk)
+    def each_error
       @errors.each do |(k, msgs)|
-        msgs.each { |m| blk.call(k, m) }
+        msgs.each { |m| yield(k, m) }
       end
+    end
+
+    def to_h
+      @errors
     end
 
     def [](k)

@@ -7,7 +7,8 @@ module TypedModel
     attr_reader :name, :spec, :model_validations, :mapping_key
 
     def initialize(name:, type: nil, seq_of: nil, map_of: nil, validations: [], mapping_key: nil)
-      @name, @mapping_key = name, mapping_key
+      @name = name
+      @mapping_key = mapping_key
       @model_validations = []
       spec_validations = []
       validations.each do |v|
@@ -17,7 +18,7 @@ module TypedModel
           model_validations << v
         end
       end
-      @spec = TypeDef.build(type: type, seq_of: seq_of, map_of: map_of, validations: spec_validations)
+      @spec = TypeDef.build(type:, seq_of:, map_of:, validations: spec_validations)
     end
 
     def attr_type
@@ -32,12 +33,9 @@ module TypedModel
       value = attr_value(model)
       spec.validate(value, model.errors, name)
       model_validations.each do |v|
-        method_name = "assert_#{v}"
-        if model.respond_to?(method_name)
-          model.send(method_name, name)
-        else
-          raise "Unrecognized validation '#{v}'"
-        end
+        method_name = :"assert_#{v}"
+        raise "Unrecognized validation '#{v}'" unless model.respond_to?(method_name)
+        model.send(method_name, name)
       end
     end
 

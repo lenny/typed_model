@@ -23,6 +23,28 @@ module TypedModel
       end
     end
 
+    describe '.assert_not_blank' do
+      it 'returns :required for nil' do
+        expect(Validators.assert_not_blank(nil)).to eq(:required)
+      end
+
+      it 'returns :required for empty string' do
+        expect(Validators.assert_not_blank('')).to eq(:required)
+      end
+
+      it 'returns :required for whitespace-only string' do
+        expect(Validators.assert_not_blank('   ')).to eq(:required)
+      end
+
+      it 'returns nil for non-blank value' do
+        expect(Validators.assert_not_blank('hello')).to be_nil
+      end
+
+      it 'returns nil for value with leading/trailing whitespace' do
+        expect(Validators.assert_not_blank('  hello  ')).to be_nil
+      end
+    end
+
     describe '.assert_not_nil' do
       it 'returns nil for non-empty value' do
         v = double(empty?: false)

@@ -38,22 +38,21 @@ module TypedModel
 
     def assert_not_blank(field)
       v = send(field)
-      add_error(field, :required) unless v.to_s.match(/\S+/)
+      add_error(field, :required) unless v.to_s.match?(/\S/)
     end
 
     def assert_timestamp(field)
       v = send(field)
-      if !v.is_a?(Time)
+      unless v.is_a?(Time)
         s = v.to_s
-        if s.match(/\S/)
-          send("#{field}=", Time.parse(s))
-        end
+        send(:"#{field}=", Time.parse(s)) if s.match?(/\S/)
       end
-    rescue
+    rescue StandardError
       add_error(field, :invalid)
     end
 
     def valid?
+      @errors = Errors.new
       self.class.before_validation_callbacks.each do |fname|
         send(fname)
       end
@@ -65,8 +64,8 @@ module TypedModel
       @errors ||= Errors.new
     end
 
-    def each_error(&blk)
-      errors.each_error(&blk)
+    def each_error(&)
+      errors.each_error(&)
     end
 
     protected

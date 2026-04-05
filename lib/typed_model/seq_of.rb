@@ -15,10 +15,8 @@ module TypedModel
     end
 
     def validate(value, errors, key_prefix)
-      unless value.nil?
-        value.each_with_index do |v, index|
-          spec.validate(v, errors, "#{key_prefix}/#{index}")
-        end
+      value&.each_with_index do |v, index|
+        spec.validate(v, errors, "#{key_prefix}/#{index}")
       end
     end
   end

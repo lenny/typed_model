@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — Sync from eop_core
+## 1.0.0
 
 ### Bug Fixes
 

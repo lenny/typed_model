@@ -9,12 +9,15 @@
 - `instantiate_type` returns nil for nil input instead of raising NoMethodError
 - `validate_recognized_types` uses `!value.nil?` instead of `value != nil` to avoid ActiveSupport DateTime comparison bug
 
-### Behavioral Changes
+### Breaking Changes
 
 - `assert_not_blank` is now a distinct validation from `assert_required` — checks for non-whitespace (`/\S/`) rather than just empty/nil
+- Removed deprecated `Fixnum` from `PRIMITIVE_CLASSES`
+
+### Additions
+
 - `Errors#to_h` added for accessing the underlying error hash
 - Mapping key attribute assignment now works bidirectionally (set via name or mapping_key)
-- Removed deprecated `Fixnum` from `PRIMITIVE_CLASSES`
 
 ### Code Quality
 

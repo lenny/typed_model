@@ -1,3 +1,5 @@
+require 'set'
+
 module TypedModel
 
   # Supported Types/Type coercion
@@ -11,7 +13,7 @@ module TypedModel
   #
   #
   class Types
-    PRIMITIVE_CLASSES = Set.new([String, TrueClass, FalseClass, Integer, Float, Fixnum])
+    PRIMITIVE_CLASSES = Set.new([String, TrueClass, FalseClass, Integer, Float])
 
     class << self
       def recognized?(t)
@@ -19,7 +21,8 @@ module TypedModel
       end
 
       def typecast(sym, value)
-        send(sym, value) || value
+        type_casted = send(sym, value)
+        type_casted.nil? ? value : type_casted
       end
 
       def timestamp(v)
@@ -28,24 +31,22 @@ module TypedModel
         else
           Time.parse(v)
         end
-      rescue
+      rescue StandardError
         nil
       end
 
       def boolean(v)
         case v
-        when "true", true then
+        when 'true', true
           true
-        when "false", false then
+        when 'false', false
           false
-        else
-          nil
         end
       end
 
       def integer(v)
         Integer(v)
-      rescue
+      rescue StandardError
         nil
       end
 

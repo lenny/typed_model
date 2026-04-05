@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
+require 'date'
 require 'typed_model/type_def'
 
 module TypedModel
@@ -147,9 +150,32 @@ module TypedModel
         end
       end
 
+      it 'casts :boolean types correctly with falsey values' do
+        spec = TypeDef.new(type: :boolean)
+        expect(spec.typecast_value('false')).to eq(false)
+        expect(spec.typecast_value(false)).to eq(false)
+        expect(spec.typecast_value('true')).to eq(true)
+      end
+
+      context 'with Class type' do
+        it 'returns nil given nil' do
+          spec = TypeDef.new(type: Object)
+          expect(spec.typecast_value(nil)).to be_nil
+        end
+      end
+
       it 'raises error for unrecognized type' do
         spec = TypeDef.new(type: true)
         expect { spec.typecast_value('test') }.to raise_error(/unrecognized type/i)
+      end
+    end
+
+    describe 'validate' do
+      it 'handles DateTime <=> nil without error' do
+        spec = TypeDef.build(type: :timestamp)
+        errors = TypedModel::Errors.new
+        spec.validate(DateTime.now, errors, :ts)
+        expect(errors).to be_empty
       end
     end
   end

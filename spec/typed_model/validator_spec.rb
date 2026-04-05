@@ -15,10 +15,10 @@ module TypedModel
 
     describe '.build' do
       it 'returns validator for recognized types' do
-        expect(Validator.build(:timestamp).validate('foo')).to_not be_nil
+        expect(Validator.build(:timestamp).validate('foo')).not_to be_nil
       end
 
-      it 'it accepts Validator instance' do
+      it 'accepts Validator instance' do
         validator = Validator.new(:foo) do |v|
           "foo #{v}"
         end

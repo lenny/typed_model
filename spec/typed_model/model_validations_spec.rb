@@ -17,8 +17,26 @@ module TypedModel
     end
 
     it 'is invalid with errors' do
-      subject.add_error(:foo, 'some error')
+      klass.class_eval do
+        def validate
+          add_error(:foo, 'some error')
+        end
+      end
       expect(subject).not_to be_valid
+    end
+
+    it 'each validation invocation starts with empty errors' do
+      klass.class_eval do
+        attr_accessor :should_fail
+
+        def validate
+          add_error(:foo, 'some error') if should_fail
+        end
+      end
+      subject.should_fail = true
+      expect(subject).not_to be_valid
+      subject.should_fail = false
+      expect(subject).to be_valid
     end
 
     describe '#assert_not_blank' do

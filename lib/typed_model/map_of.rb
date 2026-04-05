@@ -8,10 +8,8 @@ module TypedModel
     end
 
     def typecast_value(values)
-      unless values.nil?
-        values.each_with_object({}) do |(k, v), h|
-          h[key_spec.typecast_value(k)] = value_spec.typecast_value(v)
-        end
+      values&.each_with_object({}) do |(k, v), h|
+        h[key_spec.typecast_value(k)] = value_spec.typecast_value(v)
       end
     end
 
@@ -22,11 +20,9 @@ module TypedModel
     end
 
     def validate(value, errors, key_prefix)
-      unless value.nil?
-        value.each_pair do |k, v|
-          key_spec.validate(k, errors, "#{key_prefix}/keys/#{k}")
-          value_spec.validate(v, errors, "#{key_prefix}/#{k}")
-        end
+      value&.each_pair do |k, v|
+        key_spec.validate(k, errors, "#{key_prefix}/keys/#{k}")
+        value_spec.validate(v, errors, "#{key_prefix}/#{k}")
       end
     end
   end

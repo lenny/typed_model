@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'typed_model/seq_of'
 require 'typed_model/map_of'
 require 'typed_model/types'
@@ -11,25 +13,36 @@ module TypedModel
 
         t, seq_of, map_of, validations = spec_map.values_at(:type, :seq_of, :map_of, :validations)
 
-        validators = (validations || []).map do |v|
-          Validator.build(v)
-        end
-
+        validators = build_validators(validations)
         spec_opts = { type: t, validators: validators }
 
         if seq_of
-          seq_spec = build(seq_of)
-          new(spec_opts.merge(type: SeqOf.new(seq_spec)))
+          build_seq_of(spec_opts, seq_of)
         elsif map_of
-          key_spec_opts, val_spec_opts = map_of
-          if val_spec_opts.is_a?(Array)
-            val_spec_opts = { type: :map, map_of: val_spec_opts }
-          end
-          map_of = MapOf.new(build(key_spec_opts), build(val_spec_opts))
-          new(spec_opts.merge(type: map_of))
+          build_map_of(spec_opts, map_of)
         else
           new(spec_opts)
         end
+      end
+
+      private
+
+      def build_validators(validations)
+        (validations || []).map { |v| Validator.build(v) }
+      end
+
+      def build_seq_of(spec_opts, seq_of)
+        seq_spec = build(seq_of)
+        new(spec_opts.merge(type: SeqOf.new(seq_spec)))
+      end
+
+      def build_map_of(spec_opts, map_of)
+        key_spec_opts, val_spec_opts = map_of
+        if val_spec_opts.is_a?(Array)
+          val_spec_opts = { type: :map, map_of: val_spec_opts }
+        end
+        map_of = MapOf.new(build(key_spec_opts), build(val_spec_opts))
+        new(spec_opts.merge(type: map_of))
       end
     end
 
@@ -41,18 +54,16 @@ module TypedModel
     end
 
     def typecast_value(v)
-      if value_type
-        if value_type.respond_to?(:typecast_value)
-          value_type.typecast_value(v)
-        elsif value_type.is_a?(Symbol) && Types.recognized?(value_type)
-          Types.typecast(value_type, v)
-        elsif value_type.is_a?(Class)
-          instantiate_type(v)
-        else
-          raise "unrecognized type '#{value_type.inspect}'"
-        end
+      return v unless value_type
+
+      if value_type.respond_to?(:typecast_value)
+        value_type.typecast_value(v)
+      elsif recognized_scalar_type?
+        Types.typecast(value_type, v)
+      elsif value_type.is_a?(Class)
+        instantiate_type(v)
       else
-        v
+        raise "unrecognized type '#{value_type.inspect}'"
       end
     end
 
@@ -65,9 +76,7 @@ module TypedModel
         value_type.validate(value, errors, key_prefix)
       end
 
-      if value.respond_to?(:valid?) && value.respond_to?(:errors) && !value.valid?
-        errors.merge!(value.errors, key_prefix)
-      end
+      merge_value_errors(value, errors, key_prefix)
     end
 
     def to_data(value)
@@ -82,8 +91,12 @@ module TypedModel
 
     private
 
+    def recognized_scalar_type?
+      value_type.is_a?(Symbol) && Types.recognized?(value_type)
+    end
+
     def execute_validators(errors, key_prefix, value)
-      validators.each_with_object(errors) do |v, errors|
+      validators.each do |v|
         (v.validate(value) || []).each do |s|
           errors.add(key_prefix, s)
         end
@@ -91,14 +104,22 @@ module TypedModel
     end
 
     def validate_recognized_types(errors, key_prefix, value)
-      if value_type.is_a?(Symbol) && Types.recognized?(value_type)
-        if value != nil && Types.send(value_type, value).nil?
+      if recognized_scalar_type?
+        if !value.nil? && Types.send(value_type, value).nil?
           errors.add(key_prefix, :invalid)
         end
       end
     end
 
+    def merge_value_errors(value, errors, key_prefix)
+      if value.respond_to?(:valid?) && value.respond_to?(:errors) && !value.valid?
+        errors.merge!(value.errors, key_prefix)
+      end
+    end
+
     def instantiate_type(v)
+      return nil if v.nil?
+
       if v.is_a?(value_type)
         v
       else
@@ -108,5 +129,3 @@ module TypedModel
     end
   end
 end
-
-

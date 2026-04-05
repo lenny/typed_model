@@ -4,24 +4,16 @@ module TypedModel
   class Validator
     class << self
       def build(arg)
-        if arg.respond_to?(:validate) && arg.respond_to?(:name)
-          return arg
-        end
-        if arg.is_a?(Symbol)
-          if Validators.recognized?(arg)
-            new_builtin_validator(arg)
-          else
-            raise "Unrecognized validation '#{arg}'"
-          end
-        else
-          raise "failed to create validator from '#{arg}'"
-        end
+        return arg if arg.respond_to?(:validate) && arg.respond_to?(:name)
+        raise "failed to create validator from '#{arg}'" unless arg.is_a?(Symbol)
+        raise "Unrecognized validation '#{arg}'" unless Validators.recognized?(arg)
+        new_builtin_validator(arg)
       end
 
       def from_primitive(t)
         new(t) do |v|
           errors = []
-          if v != nil && (msg = send("assert_#{t}", v))
+          if !v.nil? && (msg = send(:"assert_#{t}", v))
             errors << msg
           end
           errors

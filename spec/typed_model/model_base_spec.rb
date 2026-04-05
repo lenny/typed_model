@@ -85,18 +85,31 @@ module TypedModel
           expect(o.to_data).to eq(errors: %w(one two))
         end
       end
+
+      it 'supports setting attributes via name or mapping_key' do
+        klass.class_eval do
+          attribute :server_errors, seq_of: :string, mapping_key: :errors
+        end
+        by_name = klass.new(server_errors: %w(one two))
+        by_key = klass.new(errors: %w(one two))
+        expect(by_name.server_errors).to eq(%w(one two))
+        expect(by_key.server_errors).to eq(%w(one two))
+      end
     end
 
     specify 'declared attributes are inherited' do
       c1 = Class.new do
         include ModelBase
         attribute :foo
+        def self.name; 'C1'; end
       end
       c2 = Class.new(c1) do
         attribute :bar
+        def self.name; 'C2'; end
       end
       c3 = Class.new(c2) do
         attribute :baz
+        def self.name; 'C3'; end
       end
       expect(c1.declared_attributes.keys).to eq([:foo])
       expect(c2.declared_attributes.keys).to eq([:foo, :bar])
@@ -167,10 +180,23 @@ module TypedModel
         expect(subject).not_to be_valid
       end
 
-      it 'pulls nested association messages up to top level with adjusted path' do
-        subject.alternate_addresses[1].street = ''
-        expect(subject).not_to be_valid
-        expect(subject.errors['alternate_addresses/1/street']).to include(:required)
+      describe 'pulls nested association messages up to top level with adjusted path' do
+        example 'without mapping key' do
+          subject.alternate_addresses[1].street = ''
+          expect(subject).not_to be_valid
+          expect(subject.errors['alternate_addresses/1/street']).to include(:required)
+        end
+
+        example 'with mapping key' do
+          a_c = address_class
+          mk_class = Class.new do
+            include ModelBase
+            attribute :addrs, seq_of: a_c, mapping_key: :addresses
+          end
+          o = mk_class.new(addresses: [{ street: 'ok' }, { street: '' }])
+          expect(o).not_to be_valid
+          expect(o.errors['addrs/1/street']).to include(:required)
+        end
       end
 
       describe 'custom validations' do

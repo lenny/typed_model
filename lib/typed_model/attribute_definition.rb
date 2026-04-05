@@ -18,7 +18,7 @@ module TypedModel
           model_validations << v
         end
       end
-      @spec = TypeDef.build(type:, seq_of:, map_of:, validations: spec_validations)
+      @spec = TypeDef.build(type: type, seq_of: seq_of, map_of: map_of, validations: spec_validations)
     end
 
     def attr_type

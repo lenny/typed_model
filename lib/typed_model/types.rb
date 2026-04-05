@@ -1,3 +1,5 @@
+require 'set'
+
 module TypedModel
 
   # Supported Types/Type coercion

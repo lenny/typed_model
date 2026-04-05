@@ -32,7 +32,7 @@ module TypedModel
         class << self
           def attribute(name, **opts)
             @declared_attributes ||= {}
-            attribute_def = AttributeDefinition.new(**opts, name:)
+            attribute_def = AttributeDefinition.new(**opts, name: name)
             @declared_attributes[name.to_sym] = attribute_def
             attr_reader name
             define_method :"#{name}=" do |v|

@@ -64,8 +64,8 @@ module TypedModel
       @errors ||= Errors.new
     end
 
-    def each_error(&)
-      errors.each_error(&)
+    def each_error(&blk)
+      errors.each_error(&blk)
     end
 
     protected

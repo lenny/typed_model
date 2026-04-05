@@ -23,7 +23,7 @@ module TypedModel
     end
 
     def to_h
-      @errors
+      @errors.to_h
     end
 
     def [](k)

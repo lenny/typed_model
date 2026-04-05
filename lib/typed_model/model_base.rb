@@ -30,7 +30,7 @@ module TypedModel
         before_validation :validate_declared_attributes
 
         class << self
-          def attribute(name, **opts)
+          def attribute(name, opts = {})
             @declared_attributes ||= {}
             attribute_def = AttributeDefinition.new(**opts, name: name)
             @declared_attributes[name.to_sym] = attribute_def
